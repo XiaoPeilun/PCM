@@ -1,16 +1,19 @@
 function seq = pcm(signal)
-% input  signal: the signal that need to encode
-% output swq   : the encoded signal
+% input  signal: the signal to encode
+% output seq   : the encoded signal
 % 13-segment A-law PCM encoder
+% implemented by Xiao
 
 z = sign(signal);       % record the sign 
 mx = max(abs(signal));  % get maximum values
-s = abs(signal/mx);     % normalization
-q = 2048*s;
-y = zeros(length(s),8);
-seq = zeros(1,length(s)*8);
+s = abs(signal/mx);     % normalization (between 0-1)
+q = 2048*s;             % q between 0-2048
+y = zeros(length(s),8);     % temporary value for saving results
+seq = zeros(1,length(s)*8); % output signal is 8 times longer than input
 
 for m=1:length(s)
+    % for segment encode
+    % [0,16),[16,32),...,[512,1024),[1024,2048)
     if (q(m)>=128 && q(m)<2048)
         y(m,2) = 1;
     end
@@ -21,6 +24,7 @@ for m=1:length(s)
         y(m,4) = 1;           
     end
     
+    % for in-segment quantitation encode
     level = 0;
     
     if (q(m)<16)
@@ -51,23 +55,17 @@ for m=1:length(s)
         y(m,:) = [0 1 1 1 1 1 1 1];
     end
     
+    % sign encode
     if (z(m)>0)
         y(m,1) = 1;
     end
 end
-        
+
+% flatten
 for i = 1:length(s)
     for j = 1:8
         seq(1,(i-1)*8+j) = y(i,j);
     end
 end
-end   
-        
-        
-        
-        
-        
-        
-        
-        
+end
         
